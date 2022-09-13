@@ -10,7 +10,8 @@
    [hiccup2.core :as hiccup]
    [markdown.core :as md]
    [selmer.parser :as selmer]
-   [org-crud.core :as org-crud]))
+   [org-crud.core :as org-crud]
+   [org-crud.markdown :as org-crud.markdown]))
 
 (def ^:private cache-filename "cache.edn")
 (def ^:private resource-path "quickblog")
@@ -132,17 +133,19 @@
       (str/replace "$$NDASH$$" "--")
       (str/replace "$$RET$$" "\n")))
 
+(defn markdown-content->html [md-content]
+  (-> md-content
+      pre-process-markdown
+      (md/md-to-html-string-with-meta :reference-links? true
+                                      :code-style
+                                      (fn [lang]
+                                        (format "class=\"lang-%s\"" lang)))
+      :html
+      post-process-markdown))
+
 (defn markdown->html [file]
-  (let [markdown (slurp file)]
-    (println "Processing markdown for file:" (str file))
-    (-> markdown
-        pre-process-markdown
-        (md/md-to-html-string-with-meta :reference-links? true
-                                        :code-style
-                                        (fn [lang]
-                                          (format "class=\"lang-%s\"" lang)))
-        :html
-        post-process-markdown)))
+  (println "Processing markdown for file:" (str file))
+  (markdown-content->html (slurp file)))
 
 (defn sort-posts [posts]
   (sort-by :date (comp - compare) posts))
@@ -191,12 +194,9 @@
            (java.time.format.DateTimeFormatter/ofPattern "yyyy-MM-dd")))
 
 (defn org->html [path]
-  (let [nested-item (org-crud/path->nested-item path)]
-    (str
-      (hiccup/html
-        [:div
-         (str (:org/name nested-item))
-         (str nested-item)]))))
+  (let [nested-item (org-crud/path->nested-item path)
+        md-body     (org-crud.markdown/item->md-body nested-item)]
+    (-> (str/join "\n" md-body) markdown-content->html)))
 
 (defn path->html [path]
   (let [ext (fs/extension path)]
