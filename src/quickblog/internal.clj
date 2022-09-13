@@ -11,7 +11,8 @@
    [markdown.core :as md]
    [selmer.parser :as selmer]
    [org-crud.core :as org-crud]
-   [org-crud.markdown :as org-crud.markdown]))
+   [org-crud.markdown :as org-crud.markdown])
+  (:import java.time.format.DateTimeFormatter))
 
 (def ^:private cache-filename "cache.edn")
 (def ^:private resource-path "quickblog")
@@ -167,8 +168,6 @@
       (println "Reading post from cache:" (str file))
       (slurp cached-file))))
 
-(import java.time.format.DateTimeFormatter)
-
 (defn org-path->metadata [path]
   (let [nested-item (org-crud/path->nested-item path)
 
@@ -184,14 +183,6 @@
      :title    (:org/name nested-item)
      :date     created-at
      :tags     (:org/tags nested-item)}))
-
-(comment
-  (org-path->metadata "/home/russ/todo/garden/which_key_emacs.org")
-
-  (import java.time.format.DateTimeFormatter)
-  (.format (java.time.format.DateTimeFormatter/ofPattern "yyyy-MM-dd"))
-  (.format (java.time.LocalDate/now)
-           (java.time.format.DateTimeFormatter/ofPattern "yyyy-MM-dd")))
 
 (defn org->html [path]
   (let [nested-item (org-crud/path->nested-item path)
@@ -215,8 +206,6 @@
         stale?      (or force-render
                         (rendering-modified? cached-file (cons path rendering-system-files)))]
     (println "Reading metadata for post:" (str file))
-    (-> path org-path->metadata)
-
     (try
       (let [post (-> (cond
                        (#{"md"} ext)  (-> (slurp path) md/md-to-meta (transform-metadata default-metadata))
@@ -234,37 +223,6 @@
       (catch Exception e
         {:quickblog/error (format "Skipping post %s due to exception: %s"
                                   (str file) (str e))}))))
-
-(comment
-  (load-post
-    {:blog-description       "Clojure, Game Dev, and Nerd Tools"
-     :blog-author            "Russell Matney"
-     :post-paths             #{"/home/russ/todo/garden/which_key_emacs.org" "/home/russ/todo/garden/cheatsheets.org" "/home/russ/todo/garden/the_garden_process.org"}
-     :num-index-posts        3
-     :favicon-dir            "assets/favicon"
-     :posts-dir              "_posts/techsposure"
-     :assets-dir             "assets"
-     :assets-out-dir         "public/assets"
-     :cached-posts           {}
-     :blog-url               "https://blog.russmatney.com"
-     :templates-dir          "templates"
-     :favicon                false
-     :out-dir                "public"
-     :blog-root              "https://github.com/borkdude/quickblog"
-     :favicon-out-dir        "public/assets/favicon"
-     :tags-dir               "tags"
-     :default-metadata       {}
-     :cache-dir              ".work"
-     :blog-title             "Danger Russ Blog"
-     :force-render           false
-     :twitter-handle         "russmatney"
-     :rendering-system-files #{"templates" "bb.edn" "deps.edn"}
-     :posts-file             "posts.edn"}
-    "/home/russ/todo/garden/which_key_emacs.org")
-
-  )
-
-
 
 (defn ->filename [path]
   (-> path fs/file fs/file-name))
@@ -332,13 +290,12 @@
        (map first)
        set))
 
-(defn modified-posts [{:keys [force-render out-dir posts posts-dir
+(defn modified-posts [{:keys [_force-render out-dir posts posts-dir
                               rendering-system-files]
                        :as   _opts}]
   (->> posts
        (filter (fn [[file _post-data]]
-                 (let [out-file (fs/file out-dir (html-file file))
-
+                 (let [out-file     (fs/file out-dir (html-file file))
                        ;; TODO iron out posts-dir here, maybe through _post-data
                        force-render true
                        post-file    (fs/file posts-dir file)]
