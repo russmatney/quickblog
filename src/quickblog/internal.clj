@@ -9,7 +9,8 @@
    [clojure.string :as str]
    [hiccup2.core :as hiccup]
    [markdown.core :as md]
-   [selmer.parser :as selmer]))
+   [selmer.parser :as selmer]
+   [org-crud.core :as org-crud]))
 
 (def ^:private cache-filename "cache.edn")
 (def ^:private resource-path "quickblog")
@@ -22,7 +23,8 @@
 
 (def ^:private required-metadata
   #{:date
-    :title})
+    :title
+    :tags})
 
 (defmacro ->map [& ks]
   (assert (every? symbol? ks))
@@ -162,13 +164,39 @@
       (println "Reading post from cache:" (str file))
       (slurp cached-file))))
 
+(import java.time.format.DateTimeFormatter)
+
 (defn org-path->metadata [path]
-  ;; TODO
-  {:some/meta :data})
+  (let [nested-item (org-crud/path->nested-item path)
+
+        created-at (:org.prop/created-at nested-item)
+        created-at (when created-at
+                     (->
+                       created-at
+                       (java.time.LocalDateTime/parse (DateTimeFormatter/ofPattern "yyyyMMdd:HHmmss"))
+                       (java.time.ZonedDateTime/of java.time.ZoneOffset/UTC)
+                       ;; back to string so the rest of quickblog handles it as expected
+                       (.format (java.time.format.DateTimeFormatter/ofPattern "yyyy-MM-dd"))))]
+    {:org/item nested-item
+     :title    (:org/name nested-item)
+     :date     created-at
+     :tags     (:org/tags nested-item)}))
+
+(comment
+  (org-path->metadata "/home/russ/todo/garden/which_key_emacs.org")
+
+  (import java.time.format.DateTimeFormatter)
+  (.format (java.time.format.DateTimeFormatter/ofPattern "yyyy-MM-dd"))
+  (.format (java.time.LocalDate/now)
+           (java.time.format.DateTimeFormatter/ofPattern "yyyy-MM-dd")))
 
 (defn org->html [path]
-  ;; TODO impl
-  "<div>some html str</div>")
+  (let [nested-item (org-crud/path->nested-item path)]
+    (str
+      (hiccup/html
+        [:div
+         (str (:org/name nested-item))
+         (str nested-item)]))))
 
 (defn path->html [path]
   (let [ext (fs/extension path)]
@@ -180,8 +208,6 @@
                          force-render rendering-system-files]
                   :as   opts}
                  path]
-  (println "opts" opts)
-  (def opts opts)
   (let [path        (fs/file path)
         file        (fs/file-name path)
         ext         (fs/extension path)
@@ -204,10 +230,8 @@
                                         (spit cached-file html)
                                         html))
                                     (read-cached-post opts file))))]
-        (println "post" post)
         (validate-metadata post))
       (catch Exception e
-        (println e)
         {:quickblog/error (format "Skipping post %s due to exception: %s"
                                   (str file) (str e))}))))
 
@@ -397,9 +421,11 @@
     [:h1 title]
     [:ul.index
      (for [{:keys [file title date preview]} posts
-           :when (not preview)]
+           :when                             (not preview)]
        [:li [:span
-             [:a {:href (str relative-path (str/replace file ".md" ".html"))}
+             [:a {:href (str relative-path (-> file
+                                               (str/replace ".md" ".html")
+                                               (str/replace ".org" ".html")))}
               title]
              " - "
              date]])]]))

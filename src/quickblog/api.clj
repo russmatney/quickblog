@@ -251,8 +251,11 @@
                               :page-template page-template
                               :post-template post-template)
                        post)
-      (let [legacy-dir (fs/file out-dir (str/replace date "-" "/")
-                                (str/replace file ".md" ""))]
+      (let [legacy-dir (fs/file out-dir
+                                (str/replace date "-" "/")
+                                (-> file
+                                    (str/replace ".md" "")
+                                    (str/replace ".org" "")))]
         (when legacy
           (fs/create-dirs legacy-dir)
           (let [legacy-file   (fs/file (fs/file legacy-dir "index.html"))
@@ -304,7 +307,9 @@
               (let [post-template (lib/ensure-resource (fs/file templates-dir "post.html"))]
                 (->> (selmer/render (slurp post-template)
                                     (assoc post
-                                           :post-link (str/replace file ".md" ".html")
+                                           :post-link (-> file
+                                                          (str/replace ".md" ".html")
+                                                          (str/replace ".org" ".html"))
                                            :body @html))
                      (format "<div>\n%s\n</div>")))))
        (str/join "\n")))
@@ -383,26 +388,30 @@
   ;; validate at https://validator.w3.org/feed/check.cgi
   [{:keys [blog-title blog-author blog-root] :as opts} posts]
   (-> (xml/sexp-as-element
-       [::atom/feed
-        {:xmlns "http://www.w3.org/2005/Atom"}
-        [::atom/title blog-title]
-        [::atom/link {:href (lib/blog-link opts "atom.xml") :rel "self"}]
-        [::atom/link {:href blog-root}]
-        [::atom/updated (rfc-3339-now)]
-        [::atom/id blog-root]
-        [::atom/author
-         [::atom/name blog-author]]
-        (for [{:keys [title date file preview html]} posts
-              :when (not preview)
-              :let [html-file (str/replace file ".md" ".html")
-                    link (lib/blog-link opts html-file)]]
-          [::atom/entry
-           [::atom/id link]
-           [::atom/link {:href link}]
-           [::atom/title title]
-           [::atom/updated (rfc-3339 date)]
-           [::atom/content {:type "html"}
-            [:-cdata @html]]])])
+        [::atom/feed
+         {:xmlns "http://www.w3.org/2005/Atom"}
+         [::atom/title blog-title]
+         [::atom/link {:href (lib/blog-link opts "atom.xml") :rel "self"}]
+         [::atom/link {:href blog-root}]
+         [::atom/updated (rfc-3339-now)]
+         [::atom/id blog-root]
+         [::atom/author
+          [::atom/name blog-author]]
+         (for [{:keys [title date file preview html]} posts
+               :when                                  (not preview)
+               :let                                   [html-file
+                                                       (->
+                                                         file
+                                                         (str/replace ".org" ".html")
+                                                         (str/replace ".md" ".html"))
+                                                       link (lib/blog-link opts html-file)]]
+           [::atom/entry
+            [::atom/id link]
+            [::atom/link {:href link}]
+            [::atom/title title]
+            [::atom/updated (rfc-3339 date)]
+            [::atom/content {:type "html"}
+             [:-cdata @html]]])])
       xml/indent-str))
 
 (defn- spit-feeds [{:keys [out-dir modified-posts posts] :as opts}]
@@ -479,29 +488,29 @@
   {:org.babashka/cli
    {:spec
     {:file
-     {:desc "Filename of post (relative to posts-dir)"
-      :ref "<filename>"
+     {:desc    "Filename of post (relative to posts-dir)"
+      :ref     "<filename>"
       :require true}
 
      :title
-     {:desc "Title of post"
-      :ref "<title>"
+     {:desc    "Title of post"
+      :ref     "<title>"
       :require true}
 
      :tags
-     {:desc "List of tags (example: --tag tag1 tag2 \"tag3 has spaces\")"
-      :ref "<tags>"
+     {:desc    "List of tags (example: --tag tag1 tag2 \"tag3 has spaces\")"
+      :ref     "<tags>"
       :default ["clojure"]
       :require true}}}}
   [opts]
   (let [{:keys [file title posts-dir tags]
-         :or {tags ["clojure"]}
-         :as opts} (apply-default-opts opts)]
+         :or   {tags ["clojure"]}
+         :as   opts} (apply-default-opts opts)]
     (doseq [k [:file :title]]
       (assert (contains? opts k) (format "Missing required option: %s" k)))
-    (let [file (if (re-matches #"^.+[.][^.]+$" file)
-                 file
-                 (str file ".md"))
+    (let [file      (if (re-matches #"^.+[.][^.]+$" file)
+                      file
+                      (str file ".md"))
           post-file (fs/file posts-dir file)]
       (when-not (fs/exists? post-file)
         (fs/create-dirs posts-dir)
@@ -558,12 +567,12 @@
   {:org.babashka/cli
    {:spec
     {:port
-     {:desc "Port for HTTP server to listen on"
-      :ref "<port>"
+     {:desc    "Port for HTTP server to listen on"
+      :ref     "<port>"
       :default 1888}}}}
   [opts]
   (let [{:keys [assets-dir assets-out-dir posts-dir templates-dir]
-         :as opts}
+         :as   opts}
         (-> opts
             apply-default-opts
             (assoc :watch "<script type=\"text/javascript\" src=\"https://livejs.com/live.js\"></script>")
@@ -573,6 +582,7 @@
     (let [load-pod (requiring-resolve 'babashka.pods/load-pod)]
       (load-pod 'org.babashka/fswatcher "0.0.3")
       (let [watch (requiring-resolve 'pod.babashka.fswatcher/watch)]
+        ;; TODO support an alternate posts-dir (org-garden-dir)
         (watch posts-dir
                (fn [{:keys [path type]}]
                  (println "Change detected:" (name type) (str path))
@@ -581,7 +591,7 @@
                      ;; skip Emacs backup files and the like
                      (when-not (str/starts-with? post-filename ".")
                        (println "Re-rendering" post-filename)
-                       (let [post (lib/load-post opts path)
+                       (let [post  (lib/load-post opts path)
                              posts (cond
                                      (contains? #{:remove :rename} type)
                                      (dissoc @posts-cache post-filename)
