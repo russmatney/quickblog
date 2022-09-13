@@ -1,3 +1,30 @@
+# Quickblog fork roughly supporting org files
+
+This is a fork of [borkdude/quickblog](https://github.com/borkdude/quickblog)
+with some rough commits supporting my personal blog usage:
+
+- Rendering org files rather than markdown, mostly via
+  [russmatney/org-crud](https://github.com/russmatney/org-crud). (Though markdown is
+  still supported!)
+- supporting a passed list of files (`:post-paths`) rather than a fixed `posts/`
+  directory, so that I can write and publish directly from my `org-dir`. My goal
+  is to write directly into the org-dir and have org-items tagged with
+  `posts`/`daily`/etc publishable without intermediary files.
+
+If there is interest in including any of these features in the original repo,
+feel free to let me know either here or on clojurians slack - for now I figure
+blogs are fairly personal hacks, but perhaps there are others looking to publish
+a blog via clojure rather than emacs from their org directory?
+
+There are some missing pieces for properly supporting org->html in org-crud -
+there are notes in that repo's readme, but be aware that not all org structures
+are supported yet (e.g. tables, images) - I hope to extend support for those
+things in the future.
+
+--
+
+Original readme below:
+
 # Quickblog
 
 The blog code powering my [blog](https://blog.michielborkent.nl/).
