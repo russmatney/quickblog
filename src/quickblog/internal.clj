@@ -92,7 +92,8 @@
             relative-url)))
 
 (defn html-file [file]
-  (str/replace file ".md" ".html"))
+  (let [ext (fs/extension file)]
+    (str/replace file ext "html")))
 
 (defn cache-file [file]
   (str file ".pre-template.html"))
@@ -161,33 +162,85 @@
       (println "Reading post from cache:" (str file))
       (slurp cached-file))))
 
+(defn org-path->metadata [path]
+  ;; TODO
+  {:some/meta :data})
+
+(defn org->html [path]
+  ;; TODO impl
+  "<div>some html str</div>")
+
+(defn path->html [path]
+  (let [ext (fs/extension path)]
+    (cond
+      (#{"md"} ext)  (markdown->html path)
+      (#{"org"} ext) (org->html path))))
+
 (defn load-post [{:keys [cache-dir default-metadata
                          force-render rendering-system-files]
-                  :as opts}
+                  :as   opts}
                  path]
-  (let [path (fs/file path)
-        file (fs/file-name path)
+  (println "opts" opts)
+  (def opts opts)
+  (let [path        (fs/file path)
+        file        (fs/file-name path)
+        ext         (fs/extension path)
         cached-file (fs/file cache-dir (cache-file file))
-        stale? (or force-render
-                   (rendering-modified? cached-file (cons path rendering-system-files)))]
+        stale?      (or force-render
+                        (rendering-modified? cached-file (cons path rendering-system-files)))]
     (println "Reading metadata for post:" (str file))
+    (-> path org-path->metadata)
+
     (try
-      (-> (slurp path)
-          md/md-to-meta
-          (transform-metadata default-metadata)
-          (assoc :file (fs/file-name file)
-                 :html (if stale?
-                         (delay
-                           (println "Parsing Markdown for post:" (str file))
-                           (let [html (markdown->html path)]
-                             (println "Caching post to file:" (str cached-file))
-                             (spit cached-file html)
-                             html))
-                         (read-cached-post opts file)))
-          validate-metadata)
+      (let [post (-> (cond
+                       (#{"md"} ext)  (-> (slurp path) md/md-to-meta (transform-metadata default-metadata))
+                       (#{"org"} ext) (-> path org-path->metadata))
+                     (assoc :file (fs/file-name file)
+                            :html (if stale?
+                                    (delay
+                                      (println "Converting post to html:" (str file))
+                                      (let [html (path->html path)]
+                                        (println "Caching post to file:" (str cached-file))
+                                        (spit cached-file html)
+                                        html))
+                                    (read-cached-post opts file))))]
+        (println "post" post)
+        (validate-metadata post))
       (catch Exception e
+        (println e)
         {:quickblog/error (format "Skipping post %s due to exception: %s"
                                   (str file) (str e))}))))
+
+(comment
+  (load-post
+    {:blog-description       "Clojure, Game Dev, and Nerd Tools"
+     :blog-author            "Russell Matney"
+     :post-paths             #{"/home/russ/todo/garden/which_key_emacs.org" "/home/russ/todo/garden/cheatsheets.org" "/home/russ/todo/garden/the_garden_process.org"}
+     :num-index-posts        3
+     :favicon-dir            "assets/favicon"
+     :posts-dir              "_posts/techsposure"
+     :assets-dir             "assets"
+     :assets-out-dir         "public/assets"
+     :cached-posts           {}
+     :blog-url               "https://blog.russmatney.com"
+     :templates-dir          "templates"
+     :favicon                false
+     :out-dir                "public"
+     :blog-root              "https://github.com/borkdude/quickblog"
+     :favicon-out-dir        "public/assets/favicon"
+     :tags-dir               "tags"
+     :default-metadata       {}
+     :cache-dir              ".work"
+     :blog-title             "Danger Russ Blog"
+     :force-render           false
+     :twitter-handle         "russmatney"
+     :rendering-system-files #{"templates" "bb.edn" "deps.edn"}
+     :posts-file             "posts.edn"}
+    "/home/russ/todo/garden/which_key_emacs.org")
+
+  )
+
+
 
 (defn ->filename [path]
   (-> path fs/file fs/file-name))
@@ -259,9 +312,12 @@
                               rendering-system-files]
                        :as   _opts}]
   (->> posts
-       (filter (fn [[file _]]
-                 (let [out-file  (fs/file out-dir (html-file file))
-                       post-file (fs/file posts-dir file)]
+       (filter (fn [[file _post-data]]
+                 (let [out-file (fs/file out-dir (html-file file))
+
+                       ;; TODO iron out posts-dir here, maybe through _post-data
+                       force-render true
+                       post-file    (fs/file posts-dir file)]
                    (or force-render
                        (rendering-modified? out-file
                                             (cons post-file rendering-system-files))))))
