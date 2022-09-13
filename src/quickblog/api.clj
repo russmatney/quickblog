@@ -78,7 +78,14 @@
       :ref "<dir>"
       :default "posts"
       :require true
-      :group :input-directories}
+      :group   :input-directories}
+
+     :post-paths
+     {:desc    "A set of paths to include in the blog."
+      :ref     "<file1> <file2>..."
+      :default []
+      :coerce  []
+      :group   :input-directories}
 
      :templates-dir
      {:desc "Directory to read templates from; see Templates section in README"
