@@ -84,7 +84,7 @@
         (ensure-template opts template-name))
       (println "Skipping custom template:" (str template)))))
 
-(defn blog-link [{:keys [blog-root] :as opts} relative-url]
+(defn blog-link [{:keys [blog-root] :as _opts} relative-url]
   (when relative-url
     (format "%s%s%s"
             blog-root
@@ -192,7 +192,7 @@
 (defn ->filename [path]
   (-> path fs/file fs/file-name))
 
-(defn has-error? [opts [_ {:keys [quickblog/error]}]]
+(defn has-error? [_opts [_ {:keys [quickblog/error]}]]
   (when error
     (println error)
     true))
@@ -203,8 +203,7 @@
         post-paths          (or post-paths (set (fs/glob posts-dir "*.md")))
         modified-post-paths (if (empty? cached-posts)
                               (set post-paths)
-                              (set (fs/modified-since cache-file post-paths)))
-        cached-post-paths   (set/difference post-paths modified-post-paths)]
+                              (set (fs/modified-since cache-file post-paths)))]
     (merge (->> cached-posts
                 (map (fn [[file post]]
                        [file (assoc post :html (read-cached-post opts file))]))
@@ -227,19 +226,19 @@
       {}
       (edn/read-string (slurp cache-file)))))
 
-(defn write-cache! [{:keys [cache-dir posts] :as opts}]
+(defn write-cache! [{:keys [cache-dir posts] :as _opts}]
   (let [cache-file (fs/file cache-dir cache-filename)]
     (fs/create-dirs cache-dir)
     (spit cache-file (only-metadata posts))))
 
-(defn deleted-posts [{:keys [cached-posts posts] :as opts}]
+(defn deleted-posts [{:keys [cached-posts posts] :as _opts}]
   (->> [cached-posts posts]
        (map (comp set keys))
        (apply set/difference)))
 
-(defn modified-metadata [{:keys [cached-posts posts] :as opts}]
-  (let [cached-posts (only-metadata cached-posts)
-        posts (only-metadata posts)
+(defn modified-metadata [{:keys [cached-posts posts] :as _opts}]
+  (let [cached-posts       (only-metadata cached-posts)
+        posts              (only-metadata posts)
         [cached current _] (data/diff cached-posts posts)]
     (->map cached current)))
 
@@ -258,10 +257,10 @@
 
 (defn modified-posts [{:keys [force-render out-dir posts posts-dir
                               rendering-system-files]
-                       :as opts}]
+                       :as   _opts}]
   (->> posts
        (filter (fn [[file _]]
-                 (let [out-file (fs/file out-dir (html-file file))
+                 (let [out-file  (fs/file out-dir (html-file file))
                        post-file (fs/file posts-dir file)]
                    (or force-render
                        (rendering-modified? out-file
@@ -269,29 +268,25 @@
        (map first)
        set))
 
-(defn modified-tags [{:keys [modified-metadata] :as opts}]
+(defn modified-tags [{:keys [modified-metadata] :as _opts}]
   (->> (vals modified-metadata)
        (mapcat (partial map (fn [[_ {:keys [tags]}]] tags)))
        (apply set/union)))
 
-(defn refresh-cache [{:keys [force-render
-                             cache-dir
-                             cached-posts
-                             posts
-                             rendering-system-files]
-                      :as opts}]
+(defn refresh-cache [{:keys [cached-posts posts]
+                      :as   opts}]
   ;; watch mode manages caching manually, so if cached-posts and posts are
   ;; already set, use them as is
   (let [cached-posts (if cached-posts
                        cached-posts
                        (load-cache opts))
-        opts (assoc opts :cached-posts cached-posts)
-        posts (if posts
-                posts
-                (load-posts opts))
-        opts (assoc opts :posts posts)
-        opts (assoc opts
-                    :modified-metadata (modified-metadata opts))]
+        opts         (assoc opts :cached-posts cached-posts)
+        posts        (if posts
+                       posts
+                       (load-posts opts))
+        opts         (assoc opts :posts posts)
+        opts         (assoc opts
+                            :modified-metadata (modified-metadata opts))]
     (assoc opts
            :deleted-posts (deleted-posts opts)
            :modified-posts (modified-posts opts)
@@ -330,10 +325,8 @@
                  (update acc tag #(conj % post)))
                {})))
 
-(defn- load-favicon [{:keys [favicon
-                             favicon-dir
-                             templates-dir]
-                      :as opts}]
+(defn- load-favicon [{:keys [favicon templates-dir]
+                      :as   opts}]
   (when favicon
     (-> (fs/file templates-dir favicon-template)
         (ensure-resource (fs/file templates-resource-dir favicon-template))
@@ -372,36 +365,30 @@
                              :favicon-tags (load-favicon template-vars))]
     (selmer/render template template-vars)))
 
-(defn write-post! [{:keys [blog-root
-                           twitter-handle
+(defn write-post! [{:keys [twitter-handle
                            discuss-fallback
-                           cache-dir
                            out-dir
-                           force-render
                            page-template
-                           post-template
-                           posts-dir]
-                    :as opts}
+                           post-template]
+                    :as   opts}
                    {:keys [file title date discuss tags html
                            description image image-alt]
-                    :or {discuss discuss-fallback}
-                    :as post-metadata}]
-  (let [out-file (fs/file out-dir (html-file file))
-        markdown-file (fs/file posts-dir file)
-        cached-file (fs/file cache-dir (cache-file file))
-        body (selmer/render post-template {:body @html
-                                           :title title
-                                           :date date
-                                           :discuss discuss
-                                           :tags tags})
-        author (-> (:twitter-handle post-metadata) (or twitter-handle))
-        image (when image (if (re-matches #"^https?://.+" image)
-                            image
-                            (blog-link opts image)))
-        url (blog-link opts (html-file file))
+                    :or   {discuss discuss-fallback}
+                    :as   post-metadata}]
+  (let [out-file      (fs/file out-dir (html-file file))
+        body          (selmer/render post-template {:body    @html
+                                                    :title   title
+                                                    :date    date
+                                                    :discuss discuss
+                                                    :tags    tags})
+        author        (-> (:twitter-handle post-metadata) (or twitter-handle))
+        image         (when image (if (re-matches #"^https?://.+" image)
+                                    image
+                                    (blog-link opts image)))
+        url           (blog-link opts (html-file file))
         rendered-html (render-page opts page-template
-                                   {:title title
-                                    :body body
+                                   {:title   title
+                                    :body    body
                                     :sharing (->map description
                                                     author
                                                     twitter-handle

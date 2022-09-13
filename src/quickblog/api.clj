@@ -4,78 +4,78 @@
     {
      ;; Blog metadata
      :blog-title
-     {:desc "Title of the blog"
-      :ref "<title>"
+     {:desc    "Title of the blog"
+      :ref     "<title>"
       :default "quickblog"
       :require true
-      :group :blog-metadata}
+      :group   :blog-metadata}
 
      :blog-author
-     {:desc "Author's name"
-      :ref "<name>"
+     {:desc    "Author's name"
+      :ref     "<name>"
       :default "Quick Blogger"
       :require true
-      :group :blog-metadata}
+      :group   :blog-metadata}
 
      :blog-description
-     {:desc "Blog description for subtitle and RSS feeds"
-      :ref "<text>"
+     {:desc    "Blog description for subtitle and RSS feeds"
+      :ref     "<text>"
       :default "A blog about blogging quickly"
       :require true
-      :group :blog-metadata}
+      :group   :blog-metadata}
 
      :blog-root
-     {:desc "Base URL of the blog"
-      :ref "<url>"
+     {:desc    "Base URL of the blog"
+      :ref     "<url>"
       :default "https://github.com/borkdude/quickblog"
       :require true
-      :group :blog-metadata}
+      :group   :blog-metadata}
 
      ;; Optional metadata
      :about-link
-     {:desc "Link to about the author page"
-      :ref "<url>"
+     {:desc  "Link to about the author page"
+      :ref   "<url>"
       :group :optional-metadata}
 
      :discuss-link
-     {:desc "Link to discussion forum for posts"
-      :ref "<url>"
+     {:desc  "Link to discussion forum for posts"
+      :ref   "<url>"
       :group :optional-metadata}
 
      :twitter-handle
-     {:desc "Author's Twitter handle"
-      :ref "<handle>"
+     {:desc  "Author's Twitter handle"
+      :ref   "<handle>"
       :group :optional-metadata}
 
      ;; Post config
      :default-metadata
-     {:desc "Default metadata to add to posts"
+     {:desc    "Default metadata to add to posts"
       :default {}
-      :group :post-config}
+      :group   :post-config}
 
      :num-index-posts
-     {:desc "Number of most recent posts to show on the index page"
-      :ref "<num>"
+     {:desc    "Number of most recent posts to show on the index page"
+      :ref     "<num>"
       :default 3
-      :group :post-config}
+      :group   :post-config}
 
      :posts-file
-     {:desc "File containing deprecated post metadata (used only for `migrate`)"
-      :ref "<file>"
+     {:desc    "File containing deprecated post metadata (used only for `migrate`)"
+      :ref     "<file>"
       :default "posts.edn"
-      :group :post-config}
+      :group   :post-config}
 
      ;; Input directories
      :assets-dir
-     {:desc "Directory to copy assets (images, etc.) from"
-      :ref "<dir>"
+     {:desc    "Directory to copy assets (images, etc.) from"
+      :ref     "<dir>"
       :default "assets"
       :require true
-      :group :input-directories}
+      :group   :input-directories}
 
      :posts-dir
-     {:desc "Directory to read posts from"
-      :ref "<dir>"
+     {:desc    "Directory to read posts from"
+      :ref     "<dir>"
       :default "posts"
       :require true
       :group   :input-directories}
@@ -88,78 +88,78 @@
       :group   :input-directories}
 
      :templates-dir
-     {:desc "Directory to read templates from; see Templates section in README"
-      :ref "<dir>"
+     {:desc    "Directory to read templates from; see Templates section in README"
+      :ref     "<dir>"
       :default "templates"
       :require true
-      :group :input-directories}
+      :group   :input-directories}
 
      ;; Output directories
      :out-dir
-     {:desc "Base directory for outputting static site"
-      :ref "<dir>"
+     {:desc    "Base directory for outputting static site"
+      :ref     "<dir>"
       :default "public"
       :require true
-      :group :output-directories}
+      :group   :output-directories}
 
      :assets-out-dir
-     {:desc "Directory to write assets to (relative to :out-dir)"
-      :ref "<dir>"
+     {:desc    "Directory to write assets to (relative to :out-dir)"
+      :ref     "<dir>"
       :default "assets"
       :require true
-      :group :output-directories}
+      :group   :output-directories}
 
      :tags-dir
-     {:desc "Directory to write tags to (relative to :out-dir)"
-      :ref "<dir>"
+     {:desc    "Directory to write tags to (relative to :out-dir)"
+      :ref     "<dir>"
       :default "tags"
       :require true
-      :group :output-directories}
+      :group   :output-directories}
 
      ;; Caching
      :force-render
-     {:desc "If true, pages will be re-rendered regardless of cache status"
+     {:desc    "If true, pages will be re-rendered regardless of cache status"
       :default false
-      :group :caching}
+      :group   :caching}
 
      :cache-dir
-     {:desc "Directory to use for caching"
-      :ref "<dir>"
+     {:desc    "Directory to use for caching"
+      :ref     "<dir>"
       :default ".work"
       :require true
-      :group :caching}
+      :group   :caching}
 
      :rendering-system-files
-     {:desc "Files involved in rendering pages (only set if you know what you're doing!)"
-      :ref "<file1> <file2>..."
+     {:desc    "Files involved in rendering pages (only set if you know what you're doing!)"
+      :ref     "<file1> <file2>..."
       :default ["bb.edn" "deps.edn"]
-      :coerce []
+      :coerce  []
       :require true
-      :group :caching}
+      :group   :caching}
 
      ;; Social sharing
      :blog-image
-     {:desc "Blog thumbnail image URL; see Features > Social sharing in README"
-      :ref "<url>"
+     {:desc  "Blog thumbnail image URL; see Features > Social sharing in README"
+      :ref   "<url>"
       :group :social-sharing}
 
      ;; Favicon
      :favicon
-     {:desc "If true, favicon will be added to all pages"
+     {:desc    "If true, favicon will be added to all pages"
       :default false
-      :group :favicon}
+      :group   :favicon}
 
      :favicon-dir
-     {:desc "Directory to read favicon assets from"
-      :ref "<dir>"
+     {:desc    "Directory to read favicon assets from"
+      :ref     "<dir>"
       :default "assets/favicon"
-      :group :favicon}
+      :group   :favicon}
 
      :favicon-out-dir
-     {:desc "Directory to write favicon assets to (relative to :out-dir)"
-      :ref "<dir>"
+     {:desc    "Directory to write favicon assets to (relative to :out-dir)"
+      :ref     "<dir>"
       :default "assets/favicon"
-      :group :favicon}
+      :group   :favicon}
 
      ;; Command-specific opts
 
@@ -171,7 +171,6 @@
    [clojure.set :as set]
    [clojure.string :as str]
    [hiccup2.core :as hiccup]
-   [markdown.core :as md]
    [quickblog.internal :as lib]
    [selmer.parser :as selmer]
    [selmer.filters :as filters]))
@@ -236,18 +235,18 @@
                            (fs/file "assets" "favicon" asset)))))
 
 (defn- gen-posts [{:keys [deleted-posts modified-posts posts
-                          cache-dir posts-dir out-dir templates-dir]
-                   :as opts}]
+                          cache-dir out-dir]
+                   :as   opts}]
   (let [posts-to-write (set/union modified-posts
                                   (lib/modified-post-pages opts))
-        page-template (base-html opts)
-        post-template (slurp (lib/ensure-template opts "post.html"))]
+        page-template  (base-html opts)
+        post-template  (slurp (lib/ensure-template opts "post.html"))]
     (fs/create-dirs cache-dir)
     (fs/create-dirs out-dir)
     (doseq [[file post] posts
-            :when (contains? posts-to-write file)
-            :let [{:keys [file date legacy]} post
-                  html-file (lib/html-file file)]]
+            :when       (contains? posts-to-write file)
+            :let        [{:keys [file date legacy]} post
+                         html-file (lib/html-file file)]]
       (lib/write-post! (assoc opts
                               :page-template page-template
                               :post-template post-template)
@@ -256,7 +255,7 @@
                                 (str/replace file ".md" ""))]
         (when legacy
           (fs/create-dirs legacy-dir)
-          (let [legacy-file  (fs/file (fs/file legacy-dir "index.html"))
+          (let [legacy-file   (fs/file (fs/file legacy-dir "index.html"))
                 redirect-html (selmer/render legacy-template
                                              {:new_url html-file})]
             (println "Writing legacy redirect:" (str legacy-file))
@@ -269,40 +268,39 @@
 (defn- gen-tags [{:keys [blog-title blog-description
                          blog-image blog-image-alt twitter-handle
                          modified-tags posts out-dir tags-dir]
-                  :as opts}]
+                  :as   opts}]
   (let [tags-out-dir (fs/create-dirs (fs/file out-dir tags-dir))
         posts-by-tag (lib/posts-by-tag posts)
-        tags-file (fs/file tags-out-dir "index.html")
-        template (base-html opts)]
-    (when (or (not (empty? modified-tags))
+        tags-file    (fs/file tags-out-dir "index.html")
+        template     (base-html opts)]
+    (when (or (seq modified-tags)
               (not (fs/exists? tags-file)))
       (lib/write-page! opts tags-file template
-                       {:skip-archive true
-                        :title (str blog-title " - Tags")
+                       {:skip-archive  true
+                        :title         (str blog-title " - Tags")
                         :relative-path "../"
-                        :body (hiccup/html (lib/tag-links "Tags" posts-by-tag))
-                        :sharing {:description (format "Tags - %s"
-                                                       blog-description)
-                                  :author twitter-handle
-                                  :twitter-handle twitter-handle
-                                  :image (lib/blog-link opts blog-image)
-                                  :image-alt blog-image-alt
-                                  :url (lib/blog-link opts "tags/index.html")}})
+                        :body          (hiccup/html (lib/tag-links "Tags" posts-by-tag))
+                        :sharing       {:description    (format "Tags - %s"
+                                                                blog-description)
+                                        :author         twitter-handle
+                                        :twitter-handle twitter-handle
+                                        :image          (lib/blog-link opts blog-image)
+                                        :image-alt      blog-image-alt
+                                        :url            (lib/blog-link opts "tags/index.html")}})
       (doseq [tag-and-posts posts-by-tag]
         (lib/write-tag! opts tags-out-dir template tag-and-posts))
       ;; Delete tags pages for removed tags
-      (doseq [tag (remove posts-by-tag modified-tags)
+      (doseq [tag  (remove posts-by-tag modified-tags)
               :let [tag-filename (fs/file tags-out-dir (lib/tag-file tag))]]
         (println "Deleting removed tag:" (str tag-filename))
         (fs/delete-if-exists tag-filename)))))
 
 ;;;; Generate index page with last 3 posts
 
-(defn- index [{:keys [posts discuss-link templates-dir]}]
+(defn- index [{:keys [posts templates-dir]}]
   (->> posts
-       (map (fn [{:keys [file title date tags preview discuss html]
-                  :or {discuss discuss-link}
-                  :as post}]
+       (map (fn [{:keys [file html]
+                  :as   post}]
               (let [post-template (lib/ensure-resource (fs/file templates-dir "post.html"))]
                 (->> (selmer/render (slurp post-template)
                                     (assoc post
@@ -441,7 +439,7 @@
                 out-dir
                 posts-file
                 templates-dir]
-         :as opts}
+         :as   opts}
         (-> opts apply-default-opts lib/refresh-cache)]
     (when (empty? (:posts opts))
       (if (fs/exists? posts-file)
@@ -466,6 +464,7 @@
     (lib/write-cache! opts)
     opts))
 
+^{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn quickblog
   "Alias for `render`"
   [opts]
@@ -541,15 +540,15 @@
   {:org.babashka/cli
    {:spec
     {:port
-     {:desc "Port for HTTP server to listen on"
-      :ref "<port>"
+     {:desc    "Port for HTTP server to listen on"
+      :ref     "<port>"
       :default 1888}}}}
   [opts]
-  (let [{:keys [port out-dir] :as opts} (merge (get-defaults (meta #'serve))
-                                               (apply-default-opts opts))
-        serve (requiring-resolve 'babashka.http-server/serve)]
+  (let [{:keys [port out-dir] :as _opts} (merge (get-defaults (meta #'serve))
+                                                (apply-default-opts opts))
+        serve                            (requiring-resolve 'babashka.http-server/serve)]
     (serve {:port port
-            :dir out-dir})))
+            :dir  out-dir})))
 
 (def ^:private posts-cache (atom nil))
 
