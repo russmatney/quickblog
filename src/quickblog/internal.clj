@@ -178,11 +178,24 @@
                        (java.time.LocalDateTime/parse (DateTimeFormatter/ofPattern "yyyyMMdd:HHmmss"))
                        (java.time.ZonedDateTime/of java.time.ZoneOffset/UTC)
                        ;; back to string so the rest of quickblog handles it as expected
-                       (.format (java.time.format.DateTimeFormatter/ofPattern "yyyy-MM-dd"))))]
-    {:org/item nested-item
-     :title    (:org/name nested-item)
-     :date     created-at
-     :tags     (:org/tags nested-item)}))
+                       (.format (java.time.format.DateTimeFormatter/ofPattern "yyyy-MM-dd"))))
+        created-at (cond created-at created-at
+
+                         ;; attempt to parse date from title (for daily files)
+                         (re-seq #"daily/\d\d\d\d-\d\d-\d\d.org" (:org/source-file nested-item))
+                         (-> nested-item :org/name)
+
+                         :else nil)
+        tags (:org/tags nested-item)]
+    (cond->
+        {:org/item nested-item
+         :title    (:org/name nested-item)}
+      created-at (assoc :date created-at)
+      tags       (assoc :tags tags))))
+
+(comment
+  (re-seq #"daily/\d\d\d\d-\d\d-\d\d.org" "daily/2022-19-13.org")
+  )
 
 (defn org->html [path]
   (let [nested-item (org-crud/path->nested-item path)
