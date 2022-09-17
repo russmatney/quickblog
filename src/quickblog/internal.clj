@@ -97,7 +97,8 @@
 
 (defn html-file [file]
   (let [ext (fs/extension file)]
-    (str/replace file ext "html")))
+    ;; be sure to not match on the extension if it's in the filename
+    (str/replace file (str "." ext) ".html")))
 
 (defn cache-file [file]
   (str file ".pre-template.html"))
@@ -225,7 +226,7 @@
                      (assoc :file (fs/file-name file)
                             :html (if #_ stale? true ;; force recreation for now
                                       (delay
-                                        (println "Converting post to html:" (str file))
+                                        #_(println "Converting post to html:" (str file))
                                         (let [html (path->html opts path)]
                                           #_(println "Caching post to file:" (str cached-file))
                                           (spit cached-file html)
@@ -393,8 +394,8 @@
            :when                             (not preview)]
        [:li [:span
              [:a {:href (str relative-path (-> file
-                                               (str/replace ".md" ".html")
-                                               (str/replace ".org" ".html")))}
+                                               (str/replace #"\.md" ".html")
+                                               (str/replace #"\.org" ".html")))}
               title]
              " - "
              date]])]]))

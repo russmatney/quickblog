@@ -308,8 +308,8 @@
                 (->> (selmer/render (slurp post-template)
                                     (assoc post
                                            :post-link (-> file
-                                                          (str/replace ".md" ".html")
-                                                          (str/replace ".org" ".html"))
+                                                          (str/replace #"\.md" ".html")
+                                                          (str/replace #"\.org" ".html"))
                                            :body @html))
                      (format "<div>\n%s\n</div>")))))
        (str/join "\n")))
