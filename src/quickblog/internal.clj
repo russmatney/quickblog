@@ -194,19 +194,18 @@
       tags       (assoc :tags tags))))
 
 (comment
-  (re-seq #"daily/\d\d\d\d-\d\d-\d\d.org" "daily/2022-19-13.org")
-  )
+  (re-seq #"daily/\d\d\d\d-\d\d-\d\d.org" "daily/2022-19-13.org"))
 
-(defn org->html [path]
+(defn org->html [opts path]
   (let [nested-item (org-crud/path->nested-item path)
-        md-body     (org-crud.markdown/item->md-body nested-item)]
+        md-body     (org-crud.markdown/item->md-body nested-item opts)]
     (-> (str/join "\n" md-body) markdown-content->html)))
 
-(defn path->html [path]
+(defn path->html [opts path]
   (let [ext (fs/extension path)]
     (cond
       (#{"md"} ext)  (markdown->html path)
-      (#{"org"} ext) (org->html path))))
+      (#{"org"} ext) (org->html opts path))))
 
 (defn load-post [{:keys [cache-dir default-metadata
                          force-render rendering-system-files]
@@ -224,14 +223,14 @@
                        (#{"md"} ext)  (-> (slurp path) md/md-to-meta (transform-metadata default-metadata))
                        (#{"org"} ext) (-> path org-path->metadata))
                      (assoc :file (fs/file-name file)
-                            :html (if stale?
-                                    (delay
-                                      (println "Converting post to html:" (str file))
-                                      (let [html (path->html path)]
-                                        (println "Caching post to file:" (str cached-file))
-                                        (spit cached-file html)
-                                        html))
-                                    (read-cached-post opts file))))]
+                            :html (if #_ stale? true ;; force recreation for now
+                                      (delay
+                                        (println "Converting post to html:" (str file))
+                                        (let [html (path->html opts path)]
+                                          #_(println "Caching post to file:" (str cached-file))
+                                          (spit cached-file html)
+                                          html))
+                                      (read-cached-post opts file))))]
         (validate-metadata post))
       (catch Exception e
         {:quickblog/error (format "Skipping post %s due to exception: %s"
