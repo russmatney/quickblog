@@ -200,7 +200,10 @@
 (defn org->html [opts path]
   (let [nested-item (org-crud/path->nested-item path)
         md-body     (org-crud.markdown/item->md-body nested-item opts)]
-    (-> (str/join "\n" md-body) markdown-content->html)))
+    (try
+      (-> (str/join "\n" md-body) markdown-content->html)
+      (catch AssertionError e
+        (println "org->html assertion error" path)))))
 
 (defn path->html [opts path]
   (let [ext (fs/extension path)]
